@@ -84,6 +84,8 @@ const OccupationPage: React.FC = () => {
   } | null>(null);
   const [battleData, setBattleData] = React.useState<Battle | null>(null);
 
+  console.log(battleData);
+
   const onSelectPosition = React.useCallback(
     (x: number, y: number) => {
       if (step > 2) return;
