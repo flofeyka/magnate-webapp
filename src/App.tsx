@@ -4,6 +4,7 @@ import SideBar from "./components/shared/SideBar";
 import ProfilePage from "./pages/ProfilePage";
 import GamesPage from "./pages/GamesPage";
 import OccupationPage from "./pages/games/OccupationPage";
+import { initAuth } from "./api/api";
 
 const App: React.FC = () => {
   return (
