@@ -6,24 +6,36 @@ const platform = detectPlatform();
 
 const authData: { vk_token?: string; telegram_token?: string } = {};
 
-if (platform === "vk") {
-  await bridge.send("VKWebAppInit");
+let vkInitPromise: Promise<void> | null = null;
 
-  const { access_token: vk_token } = await bridge.send("VKWebAppGetAuthToken", {
-    app_id: import.meta.env.VITE_PUBLIC_VK_APP_ID,
-    scope: "",
-  });
+const initVk = async () => {
+  if (!vkInitPromise) {
+    vkInitPromise = (async () => {
+      await bridge.send("VKWebAppInit");
 
-  authData.vk_token = vk_token;
-}
+      const { access_token } = await bridge.send("VKWebAppGetAuthToken", {
+        app_id: Number(import.meta.env.VITE_PUBLIC_VK_APP_ID),
+        scope: "",
+      });
 
-if (platform === "telegram") {
-  const tg = window.Telegram.WebApp;
+      authData.vk_token = access_token;
+    })();
+  }
 
-  tg.ready();
+  return vkInitPromise;
+};
 
-  authData.telegram_token = tg.initData;
-}
+export const initAuth = async () => {
+  if (platform === "vk") {
+    await initVk();
+  }
+
+  if (platform === "telegram") {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    authData.telegram_token = tg.initData;
+  }
+};
 
 export const baseApi = axios.create({
   baseURL: import.meta.env.VITE_PUBLIC_API_URL,
@@ -31,6 +43,7 @@ export const baseApi = axios.create({
 
 baseApi.interceptors.request.use(async (config) => {
   const { vk_token, telegram_token } = authData;
+
   if (config.method === "post" || config.method === "put") {
     config.data = {
       ...config.data,
