@@ -6,7 +6,6 @@ import { HeroUIProvider } from "@heroui/react";
 import { BrowserRouter } from "react-router-dom";
 import { initAuth } from "./api/api.ts";
 
-await initAuth();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>

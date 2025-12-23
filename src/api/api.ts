@@ -4,36 +4,43 @@ import { detectPlatform } from "../utils/detectPlatform";
 
 const platform = detectPlatform();
 
-const authData: { vk_token?: string; telegram_token?: string } = {};
+console.log(platform);
 
-let vkInitPromise: Promise<void> | null = null;
+let authInitialized = false;
+let authInitializing = false;
 
-const initVk = async () => {
-  if (!vkInitPromise) {
-    vkInitPromise = (async () => {
+const initAuthOnce = async () => {
+  if (authInitialized || authInitializing) return;
+
+  authInitializing = true;
+
+  console.log("init auth once");
+  try {
+    if (platform === "vk") {
+      console.log("sending bridge");
       await bridge.send("VKWebAppInit");
-
+      console.log("bridge sent");
       const { access_token } = await bridge.send("VKWebAppGetAuthToken", {
         app_id: Number(import.meta.env.VITE_PUBLIC_VK_APP_ID),
         scope: "",
       });
 
-      authData.vk_token = access_token;
-    })();
-  }
+      console.log(access_token);
 
-  return vkInitPromise;
-};
+      localStorage.setItem("vk-access-token", access_token);
+    }
 
-export const initAuth = async () => {
-  if (platform === "vk") {
-    await initVk();
-  }
+    if (platform === "telegram") {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        localStorage.setItem("telegram-init-data", tg.initData);
+      }
+    }
 
-  if (platform === "telegram") {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    authData.telegram_token = tg.initData;
+    authInitialized = true;
+  } finally {
+    authInitializing = false;
   }
 };
 
@@ -42,13 +49,20 @@ export const baseApi = axios.create({
 });
 
 baseApi.interceptors.request.use(async (config) => {
-  const { vk_token, telegram_token } = authData;
+  // ❗ КРИТИЧЕСКИЙ ПРЕДОХРАНИТЕЛЬ
+  if (!authInitialized) {
+    await initAuthOnce();
+  }
 
-  if (config.method === "post" || config.method === "put") {
+  if (
+    config.method === "post" ||
+    config.method === "put" ||
+    config.method === "patch"
+  ) {
     config.data = {
-      ...config.data,
-      vk_token,
-      telegram_token,
+      ...(config.data ?? {}),
+      vk_token: localStorage.getItem("vk-access-token"),
+      telegram_token: localStorage.getItem("telegram-init-data"),
     };
   }
 
