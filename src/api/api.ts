@@ -4,19 +4,27 @@ import { detectPlatform } from "../utils/detectPlatform";
 
 const platform = detectPlatform();
 
-bridge.send("VKWebAppInit");
+let isInit = false;
+
+if (bridge) {
+  bridge.send("VKWebAppInit");
+}
 
 const initAuthOnce = async () => {
-  if (platform === "vk") {
-    const launchParams = await bridge.send("VKWebAppGetLaunchParams");
+  try {
+    if (platform === "vk" && bridge) {
+      const launchParams = await bridge.send("VKWebAppGetLaunchParams");
 
-    localStorage.setItem("vk-data", JSON.stringify(launchParams));
-  } else if (platform === "telegram") {
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      localStorage.setItem("telegram-init-data", tg.initData);
+      localStorage.setItem("vk-data", JSON.stringify(launchParams));
+    } else if (platform === "telegram") {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        localStorage.setItem("telegram-init-data", tg.initData);
+      }
     }
+  } finally {
+    isInit = true;
   }
 };
 
@@ -25,15 +33,18 @@ export const baseApi = axios.create({
 });
 
 baseApi.interceptors.request.use(async (config) => {
-  await initAuthOnce();
+  if (!isInit) {
+    await initAuthOnce();
+  }
   if (
     config.method === "post" ||
     config.method === "put" ||
     config.method === "patch"
   ) {
+    const vkDataString = localStorage.getItem("vk-data");
     config.data = {
       ...(config.data ?? {}),
-      vk_data: JSON.parse(localStorage.getItem("vk-data") || ""),
+      vk_data: vkDataString && JSON.parse(vkDataString),
       telegram_token: localStorage.getItem("telegram-init-data") || null,
     };
   }
