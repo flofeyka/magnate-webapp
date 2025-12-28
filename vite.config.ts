@@ -6,6 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: ["totally-jocular-dragonet.cloudpub.ru"],
+    allowedHosts:
+      process.env.NODE_ENV === "development"
+        ? true
+        : ["haughtily-above-fieldfare.cloudpub.ru"],
   },
 });
