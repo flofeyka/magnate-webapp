@@ -6,46 +6,67 @@ export const useFetchBattleData = (id?: string) => {
   const [battleData, setBattleData] = React.useState<Battle | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [step, setStep] = React.useState<number>(1);
+  const [remaining, setRemaining] = React.useState<number | null>(null);
+  const [isError, setIsError] = React.useState<boolean>(false);
 
-  const moveNextStepCalled = React.useRef(false);
+  const [moveNextStepCalled, setMoveStepCalled] =
+    React.useState<boolean>(false);
 
-  const remaining = React.useMemo(() => {
-    if (!battleData?.createdAt || !battleData?.duration) return null;
+  React.useEffect(() => {
+    if (!battleData?.createdAt || !battleData?.duration) {
+      setRemaining(null);
+      return;
+    }
 
-    return (
-      Date.now() -
-      new Date(battleData.createdAt).getTime() -
-      battleData.duration
-    );
+    const startTime = new Date(battleData.createdAt).getTime();
+    if (isNaN(startTime)) {
+      setRemaining(null);
+      return;
+    }
+
+    const updateTimer = () => {
+      setRemaining(battleData.duration - (Date.now() - startTime));
+    };
+
+    const timerId = setInterval(updateTimer, 100);
+    updateTimer();
+
+    return () => clearInterval(timerId);
   }, [battleData?.createdAt, battleData?.duration]);
 
   React.useEffect(() => {
     const fetchBattleData = async () => {
-      setLoading(true);
-      const data = await fetchBattleship(id);
-      setLoading(false);
-
-      setBattleData(data);
-      setStep(data.step);
+      setLoading(step < 2);
+      try {
+        const data = await fetchBattleship(id);
+        setBattleData(data);
+        setStep(data.step);
+      } catch (e) {
+        setIsError(true);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchBattleData();
-  }, [id]);
+  }, [id, step]);
 
   React.useEffect(() => {
-    if (remaining !== null && remaining < 0 && !moveNextStepCalled.current) {
-      moveNextStepCalled.current = true;
+    if (remaining && remaining < -1000 && !moveNextStepCalled) {
+      setMoveStepCalled(true);
 
       moveNextStep();
     }
   }, [remaining, moveNextStepCalled]);
 
-  const moveNextStep = () => {
-    setStep((prev) => (prev < 3 ? prev + 1 : prev));
-  };
+  const moveNextStep = React.useCallback(() => {
+    setStep((prev) => (prev < 4 ? prev + 1 : prev));
+  }, []);
 
   return {
     battleData,
+    setBattleData,
+    isError,
     loading,
     step,
     moveNextStep,

@@ -12,6 +12,7 @@ import MultipleIcon from "../../components/ui/MultipleIcon";
 import type { Aim, Company, Position } from "../../types/battle.types";
 import { cn } from "../../utils/classNames";
 import { useFetchBattleData } from "../../utils/hooks/fetchBattleData";
+import GameNotFoundPage from "../NotFoundPage";
 
 const getTitleByStep = (step: number, status?: "WIN" | "LOSE" | "DRAW") => {
   switch (step) {
@@ -134,7 +135,7 @@ const OccupationPage: React.FC = () => {
 
   const id = useParams().id;
 
-  const { battleData, loading, step, moveNextStep, remaining } =
+  const { battleData, loading, step, moveNextStep, remaining, isError } =
     useFetchBattleData(id);
 
   const onSelectPosition = React.useCallback(
@@ -161,7 +162,7 @@ const OccupationPage: React.FC = () => {
 
   if (loading) return <Loading />;
 
-  if (!battleData) return <div>Неправильная ссылка</div>;
+  if (!battleData || isError) return <GameNotFoundPage />;
 
   return (
     <div className="space-y-3 max-w-[400px] mx-auto">

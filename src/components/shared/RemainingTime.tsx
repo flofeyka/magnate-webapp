@@ -11,7 +11,9 @@ const RemainingTime: React.FC<IProps> = ({ remaining }) => {
 
   return (
     <div>
-      <Chip color="danger">Оставшееся время: {formatTime(remaining)}</Chip>
+      <Chip variant="shadow" color="danger">
+        Оставшееся время: {formatTime(remaining)}
+      </Chip>
     </div>
   );
 };
