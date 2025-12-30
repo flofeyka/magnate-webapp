@@ -1,15 +1,18 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { checkAuth } from "./api/profileApi";
 import SideBar from "./components/shared/SideBar";
+import AuthorizationPage from "./pages/AuthorizationPage";
 import GamesPage from "./pages/GamesPage";
 import ProfilePage from "./pages/ProfilePage";
 import OccupationPage from "./pages/games/OccupationPage";
-import { checkAuth } from "./api/profileApi";
-import AuthorizationPage from "./pages/AuthorizationPage";
+import { useHashAdapter } from "./utils/hooks/hashPathAdapter";
 
 const App: React.FC = () => {
   const [isAuth, setIsAuth] = React.useState<boolean>(false);
   const [pending, setPending] = React.useState<boolean>(true);
+
+  useHashAdapter();
 
   React.useEffect(() => {
     const fetchAuthResult = async () => {
