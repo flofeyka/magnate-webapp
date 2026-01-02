@@ -37,7 +37,7 @@ const App: React.FC = () => {
             <Route path="/games" element={<GamesPage />} />
             <Route path="/games/occupation/:id" element={<OccupationPage />} />
             <Route path="/games/occupation" element={<OccupationPage />} />
-            <Route path="*" element={<Navigate to="/games" />} />
+            {/* <Route path="*" element={<Navigate to="/games" />} /> */}
           </Routes>
         </div>
         <SideBar />

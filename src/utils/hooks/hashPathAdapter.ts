@@ -15,6 +15,7 @@ export const useHashAdapter = () => {
 
     const path = hash.replace("#", "");
 
+    if (!path.startsWith("games")) return;
     if (path.startsWith("/")) {
       navigate(path, { replace: true });
     } else {
