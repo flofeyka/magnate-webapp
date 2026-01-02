@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { checkAuth } from "./api/profileApi";
 import SideBar from "./components/shared/SideBar";
 import AuthorizationPage from "./pages/AuthorizationPage";
